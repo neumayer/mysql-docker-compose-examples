@@ -1,0 +1,50 @@
+version: '3'
+services:
+  mysql-server-56:
+    image: mysql/mysql-server:5.6
+    volumes:
+        - ./docker-entrypoint-initdb.d/:/docker-entrypoint-initdb.d/
+    ports:
+      - "3306:3306"
+  mysql-server-57:
+    image: mysql/mysql-server:5.7
+    volumes:
+        - ./docker-entrypoint-initdb.d/:/docker-entrypoint-initdb.d/
+    ports:
+      - "3307:3306"
+  mysql-server-80:
+    image: mysql/mysql-server:8.0
+    volumes:
+        - ./docker-entrypoint-initdb.d/:/docker-entrypoint-initdb.d/
+    ports:
+      - "3308:3306"
+  dbwebapp-56:
+    env_file:
+      - dbwebapp.env
+    environment:
+      - DBHOST=mysql-server-56
+    image: neumayer/dbwebapp
+    ports:
+      - "8056:8080"
+    depends_on:
+      - mysql-server-56
+  dbwebapp-57:
+    env_file:
+      - dbwebapp.env
+    environment:
+      - DBHOST=mysql-server-57
+    image: neumayer/dbwebapp
+    ports:
+      - "8057:8080"
+    depends_on:
+      - mysql-server-57
+  dbwebapp-80:
+    env_file:
+      - dbwebapp.env
+    environment:
+      - DBHOST=mysql-server-80
+    image: neumayer/dbwebapp
+    ports:
+      - "8080:8080"
+    depends_on:
+      - mysql-server-80
