@@ -1,0 +1,52 @@
+version: '3'
+services:
+  mysql-server-1:
+    env_file:
+      - mysql-server.env
+    image: mysql/mysql-server:5.7
+    ports:
+      - "3301:3306"
+    command: ["mysqld","--server_id=1","--binlog_checksum=NONE","--gtid_mode=ON","--enforce_gtid_consistency=ON","--log_bin","--log_slave_updates=ON","--master_info_repository=TABLE","--relay_log_info_repository=TABLE","--transaction_write_set_extraction=XXHASH64","--user=mysql","--skip-host-cache","--skip-name-resolve"]
+  mysql-server-2:
+    env_file:
+      - mysql-server.env
+    image: mysql/mysql-server:5.7
+    command: ["mysqld","--server_id=2","--binlog_checksum=NONE","--gtid_mode=ON","--enforce_gtid_consistency=ON","--log_bin","--log_slave_updates=ON","--master_info_repository=TABLE","--relay_log_info_repository=TABLE","--transaction_write_set_extraction=XXHASH64","--user=mysql","--skip-host-cache","--skip-name-resolve"]
+    ports:
+      - "3302:3306"
+  mysql-server-3:
+    env_file:
+      - mysql-server.env
+    image: mysql/mysql-server:5.7
+    command: ["mysqld","--server_id=3","--binlog_checksum=NONE","--gtid_mode=ON","--enforce_gtid_consistency=ON","--log_bin","--log_slave_updates=ON","--master_info_repository=TABLE","--relay_log_info_repository=TABLE","--transaction_write_set_extraction=XXHASH64","--user=mysql","--skip-host-cache","--skip-name-resolve"]
+    ports:
+      - "3303:3306"
+  mysql-shell:
+    env_file:
+      - mysql-shell.env
+    image: neumayer/mysql-shell-batch
+    volumes:
+        - ./scripts/:/scripts/
+    depends_on:
+      - mysql-server-1
+      - mysql-server-2
+      - mysql-server-3
+  mysql-router:
+    env_file:
+      - mysql-router.env
+    image: mysql/mysql-router
+    ports:
+      - "6446:6446"
+    depends_on:
+      - mysql-server-1
+      - mysql-server-2
+      - mysql-server-3
+      - mysql-shell
+  dbwebapp:
+    env_file:
+      - dbwebapp.env
+    image: neumayer/dbwebapp
+    ports:
+      - "8080:8080"
+    depends_on:
+      - mysql-router
