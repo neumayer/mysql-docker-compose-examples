@@ -18,6 +18,7 @@ services:
         - ./docker-entrypoint-initdb.d/:/docker-entrypoint-initdb.d/
     ports:
       - "3308:3306"
+    command: ["mysqld", "--default-authentication-plugin=mysql_native_password"]
   dbwebapp-56:
     env_file:
       - dbwebapp.env
