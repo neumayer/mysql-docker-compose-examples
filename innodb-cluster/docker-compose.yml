@@ -35,7 +35,6 @@ services:
     env_file:
       - mysql-router.env
     image: mysql/mysql-router:8.0
-    #8.0.12
     ports:
       - "6446:6446"
     depends_on:
