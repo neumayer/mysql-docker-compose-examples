@@ -1,3 +1,3 @@
-CREATE DATABASE dbwebappdb;
-CREATE USER 'dbwebapp'@'%' IDENTIFIED BY 'dbwebapp';
-GRANT ALL PRIVILEGES ON dbwebappdb.* TO 'dbwebapp'@'%';
+CREATE DATABASE abneet;
+CREATE USER 'abneet'@'%' IDENTIFIED BY 'Admin123$';
+GRANT ALL PRIVILEGES ON *.* TO 'abneet'@'%';
