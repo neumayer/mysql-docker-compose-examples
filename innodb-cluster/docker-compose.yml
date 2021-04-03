@@ -3,51 +3,77 @@ services:
   mysql-server-1:
     env_file:
       - mysql-server.env
-    image: mysql/mysql-server:8.0.12
+    image: mysql/mysql-server:8.0.13
     ports:
       - "3301:3306"
     command: ["mysqld","--server_id=1","--binlog_checksum=NONE","--gtid_mode=ON","--enforce_gtid_consistency=ON","--log_bin","--log_slave_updates=ON","--master_info_repository=TABLE","--relay_log_info_repository=TABLE","--transaction_write_set_extraction=XXHASH64","--user=mysql","--skip-host-cache","--skip-name-resolve", "--default_authentication_plugin=mysql_native_password"]
+    healthcheck:
+      test: "exit 0"
+
   mysql-server-2:
     env_file:
       - mysql-server.env
-    image: mysql/mysql-server:8.0.12
+    image: mysql/mysql-server:8.0.13
     command: ["mysqld","--server_id=2","--binlog_checksum=NONE","--gtid_mode=ON","--enforce_gtid_consistency=ON","--log_bin","--log_slave_updates=ON","--master_info_repository=TABLE","--relay_log_info_repository=TABLE","--transaction_write_set_extraction=XXHASH64","--user=mysql","--skip-host-cache","--skip-name-resolve", "--default_authentication_plugin=mysql_native_password"]
     ports:
       - "3302:3306"
+    healthcheck:
+      test: "exit 0"
+
   mysql-server-3:
     env_file:
       - mysql-server.env
-    image: mysql/mysql-server:8.0.12
+    image: mysql/mysql-server:8.0.13
     command: ["mysqld","--server_id=3","--binlog_checksum=NONE","--gtid_mode=ON","--enforce_gtid_consistency=ON","--log_bin","--log_slave_updates=ON","--master_info_repository=TABLE","--relay_log_info_repository=TABLE","--transaction_write_set_extraction=XXHASH64","--user=mysql","--skip-host-cache","--skip-name-resolve", "--default_authentication_plugin=mysql_native_password"]
     ports:
       - "3303:3306"
+    healthcheck:
+      test: "exit 0"
+
   mysql-shell:
     env_file:
       - mysql-shell.env
-    image: neumayer/mysql-shell-batch
+    image: bkandasa/mysql-shell-batch
     volumes:
         - ./scripts/:/scripts/
     depends_on:
-      - mysql-server-1
-      - mysql-server-2
-      - mysql-server-3
+      mysql-server-1:
+          condition: service_healthy
+      mysql-server-2:
+          condition: service_healthy
+      mysql-server-3:
+          condition: service_healthy
+    healthcheck:
+      test: "exit 0"
+    restart: on-failure
+
   mysql-router:
     env_file:
       - mysql-router.env
-    image: mysql/mysql-router:8.0
+    image: mysql/mysql-router:8.0.13
     ports:
       - "6446:6446"
     depends_on:
-      - mysql-server-1
-      - mysql-server-2
-      - mysql-server-3
-      - mysql-shell
+      mysql-server-1:
+          condition: service_healthy
+      mysql-server-2:
+          condition: service_healthy
+      mysql-server-3:
+          condition: service_healthy
+      mysql-shell:
+          condition: service_healthy
     restart: on-failure
-  dbwebapp:
-    env_file:
-      - dbwebapp.env
-    image: neumayer/dbwebapp
-    ports:
-      - "8080:8080"
+  phpmyadmin:
+    image: phpmyadmin
+    container_name: msr-phpmyadmin
     depends_on:
       - mysql-router
+    ports:
+      - 8181:80
+    env_file:
+      - phpmyadmin.env
+    environment:
+      PMA_HOST: mysql-router
+      PMA_PORT: 6446
+      MYSQL_USERNAME: root
+      MYSQL_ROOT_PASSWORD: mysql
